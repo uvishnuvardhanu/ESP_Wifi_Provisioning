@@ -1,3 +1,3 @@
 idf_component_register(SRCS "main.c"
                     INCLUDE_DIRS "."
-                    REQUIRES wifi_prov)
+                    REQUIRES wifi_manager LED spiffs_usr)
