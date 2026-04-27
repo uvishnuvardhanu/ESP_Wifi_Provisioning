@@ -1,10 +1,13 @@
 #include "esp_log.h"
 #include "led.h"
 #include "wifi_manager.h"
+#include "spiffs_init.h"
 
 /* ===================== MAIN ===================== */
 void app_main(void)
 {
+    init_spiffs();
+
     wifi_init();
     led_init();
 

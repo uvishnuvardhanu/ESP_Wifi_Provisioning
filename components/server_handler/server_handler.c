@@ -7,66 +7,23 @@ static const char *TAG = "server_handler";
 /* ===================== ROOT HANDLER ===================== */
 esp_err_t root_handler(httpd_req_t *req)
 {
-    const char *resp =
-        "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-        "<title>LED Control</title>"
-        "<style>"
-        "body {"
-        "font-family: Arial, sans-serif;"
-        "margin: 0; padding: 0;"
-        "background: linear-gradient(135deg,#1e3c72,#2a5298);"
-        "color: white; text-align: center;"
-        "}"
-        ".container {"
-        "display: flex;"
-        "flex-direction: column;"
-        "justify-content: center;"
-        "align-items: center;"
-        "height: 100vh;"
-        "}"
-        "h1 { margin-bottom: 30px; font-size: 32px; }"
-        ".btn {"
-        "display: inline-block;"
-        "padding: 15px 30px;"
-        "margin: 10px;"
-        "font-size: 18px;"
-        "font-weight: bold;"
-        "border: none;"
-        "border-radius: 8px;"
-        "cursor: pointer;"
-        "transition: 0.3s;"
-        "}"
-        ".btn-on { background: #4CAF50; color: white; }"
-        ".btn-on:hover { background: #45a049; }"
-        ".btn-off { background: #f44336; color: white; }"
-        ".btn-off:hover { background: #da190b; }"
-        ".bg-text {"
-        "position: fixed;"
-        "top: 50%; left: 50%;"
-        "transform: translate(-50%, -50%);"
-        "font-size: 80px;"
-        "color: rgba(255,255,255,0.1);"
-        "font-weight: bold;"
-        "pointer-events: none;"
-        "}"
-        "</style>"
-        "</head>"
+    FILE *f = fopen("/spiffs/led.html", "r");
+    if (!f)
+    {
+        httpd_resp_send_404(req);
+        return ESP_FAIL;
+    }
 
-        "<body>"
-        "<div class='bg-text'>Elecbits</div>"
-        "<div class='container'>"
-        "<h1>LED Control Panel</h1>"
-        "<a href='/on'><button class='btn btn-on'>Turn ON</button></a>"
-        "<a href='/off'><button class='btn btn-off'>Turn OFF</button></a>"
-        "</div>"
-        "</body>"
-        "</html>";
-
+    char buffer[256];
     httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+
+    while (fgets(buffer, sizeof(buffer), f))
+    {
+        httpd_resp_sendstr_chunk(req, buffer);
+    }
+    fclose(f);
+
+    httpd_resp_sendstr_chunk(req, NULL); // end response
     return ESP_OK;
 }
 
@@ -75,46 +32,23 @@ esp_err_t on_handler(httpd_req_t *req)
 {
     led_on();
 
-    const char *resp =
-        "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-        "<title>LED ON</title>"
-        "</head>"
-        "<body style='background:linear-gradient(135deg,#1e3c72,#2a5298);"
-        "color:white;text-align:center;'>"
-        "<h1>LED is ON</h1>"
-        "<a href='/' style='color:white;'>Back to Control</a>"
-        "</body>"
-        "</html>";
+    // Send a redirect back to root
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_send(req, NULL, 0);
 
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
-/* ===================== LED OFF HANDLER ===================== */
 esp_err_t off_handler(httpd_req_t *req)
 {
     led_off();
 
-    const char *resp =
-        "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-        "<title>LED OFF</title>"
-        "</head>"
-        "<body style='background:linear-gradient(135deg,#1e3c72,#2a5298);"
-        "color:white;text-align:center;'>"
-        "<h1>LED is OFF</h1>"
-        "<a href='/' style='color:white;'>Back to Control</a>"
-        "</body>"
-        "</html>";
+    // Send a redirect back to root
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_send(req, NULL, 0);
 
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
